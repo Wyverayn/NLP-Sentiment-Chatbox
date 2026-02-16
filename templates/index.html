@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sentiment Chatbox</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<style>/* style.css - Modified to match LeadBot UI, ensuring centering */
+
+/* Global and Body Reset */
+html, body {
+    height: 100%; /* Ensure both take full height */
+    margin: 0;
+    padding: 0;
+}
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #e0cffc 0%, #a29bfe 100%);;
+    display: flex;
+    justify-content: center; /* Centers horizontally */
+    align-items: center;    /* Centers vertically */
+}
+
+/* Chatbox Frame (The main container) */
+.chat-container {
+    background-color: #fff;
+    width: 100%;
+    max-width: 350px; /* Slimmer, chat-widget size */
+    height: 500px; /* Fixed height for chat window look */
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); /* Strong shadow gives the 'frame' feel */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Contains the border-radius */
+}
+
+/* --- Header Section (LeadBot Style) --- */
+.chat-header {
+    background-color: #7B1FA2; /* Deep Purple Header */
+    color: white;
+    padding: 15px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.chat-header .profile {
+    display: flex;
+    align-items: center;
+}
+
+.bot-avatar {
+    background-color: #A0522D; /* Example: SaddleBrown for contrast */
+    padding: 8px;
+    border-radius: 50%;
+    margin-right: 10px;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.chat-header .name {
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.chat-header .status {
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+.chat-header .controls span {
+    cursor: pointer;
+    font-size: 20px;
+    margin-left: 8px;
+}
+
+/* --- Messages Area --- */
+.chat-messages {
+    flex-grow: 1;
+    padding: 15px;
+    overflow-y: auto;
+    background-color: #F8F8F8; 
+}
+
+/* Message Bubble Styling */
+.message-bubble-container {
+    display: flex;
+    margin-bottom: 15px;
+}
+
+.message-bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 20px;
+    line-height: 1.4;
+    font-size: 14px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Bot Message Styling */
+.bot.message-bubble-container {
+    justify-content: flex-start;
+}
+
+.bot.message-bubble {
+    background-color: #FFFFFF; /* White/Light Bubble */
+    color: #333;
+    border-bottom-left-radius: 4px; /* Squared bottom corner */
+    border: 1px solid #E0E0E0;
+}
+
+/* User Message Styling */
+.user.message-bubble-container {
+    justify-content: flex-end;
+}
+
+.user.message-bubble {
+    background-color: #8A2BE2; /* Primary Accent Color for User */
+    color: white;
+    border-bottom-right-radius: 4px; /* Squared bottom corner */
+}
+
+/* --- Input Area --- */
+.chat-input-area {
+    display: flex;
+    padding: 10px 15px;
+    border-top: 1px solid #E0E0E0;
+    background-color: #fff;
+}
+
+#messageInput {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #E0E0E0;
+    border-radius: 20px;
+    margin-right: 10px;
+    font-size: 14px;
+    outline: none;
+}
+
+.chat-input-area button {
+    background-color: #7B1FA2; /* Purple Send Button */
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.chat-input-area button:hover {
+    background-color: #6A1B9A;
+}
+
+.chat-input-area button span {
+    font-size: 18px;
+}
+
+/* Hide the old h2 title */
+.chat-container h2 {
+    display: none;
+}
+</style>
+
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="profile">
+        <div class="bot-avatar">🤖</div>
+        <div class="info">
+          <div class="name">Sentiment Analyzer Bot</div>
+          <div class="status">🟢 Online Now</div>
+        </div>
+      </div>
+      <div class="controls">
+        <span class="material-icons">more_vert</span>
+        <span class="material-icons close-btn">close</span>
+      </div>
+    </div>
+    
+    <div id="chatbox" class="chat-messages">
+      <div class="bot message-bubble">👋 Hi! Type your movie review and I’ll tell you if it’s Positive, Negative, or Neutral.</div>
+      </div>
+
+    <form id="messageForm" class="chat-input-area">
+      <input type="text" id="messageInput" name="message" placeholder="Reply to Bot..." required>
+      <button type="submit">
+        <span class="material-icons">send</span>
+      </button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('messageForm');
+    const chatbox = document.getElementById('chatbox');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('messageInput');
+      const userMessage = input.value;
+      
+      // Append user message with new class and icon
+      chatbox.innerHTML += `<div class="user message-bubble-container"><div class="user message-bubble">🧑 ${userMessage}</div></div>`;
+      input.value = '';
+
+      // Scroll to the bottom
+      chatbox.scrollTop = chatbox.scrollHeight;
+
+      // API Call
+      const response = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ message: userMessage })
+      });
+      const data = await response.json();
+
+      // Append bot response with new class and icon
+      chatbox.innerHTML += `<div class="bot message-bubble-container"><div class="bot message-bubble">🤖 Sentiment: <b>${data.sentiment}</b> (Confidence: ${data.confidence})</div></div>`;
+      
+      // Final scroll to the bottom
+      chatbox.scrollTop = chatbox.scrollHeight;
+    });
+  </script>
+</body>
+</html>
